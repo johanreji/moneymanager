@@ -104,9 +104,9 @@ class AccountsState extends ChangeNotifier {
         balance: maps[i]['balance'],
       );
     });
-    if (accounts.length > 1) {
+    if (activeAccountId == null && accounts.length > 1) {
       activeAccountId = 0;
-    } else if (accounts.length == 1) {
+    } else if (activeAccountId == null && accounts.length == 1) {
       activeAccountId = accounts[0].id;
     }
     notifyListeners();
@@ -126,7 +126,7 @@ class AccountsState extends ChangeNotifier {
         amount: maps[i]['amount'],
         type: maps[i]['type'],
         date: DateTime.fromMillisecondsSinceEpoch(maps[i]['date']),
-        account: maps[i]['account'],
+        account: maps[i]['account_id'],
         accountName: accounts
             .where((element) => element.id == maps[i]['account_id'])
             .first
@@ -147,5 +147,48 @@ class AccountsState extends ChangeNotifier {
   void changeActiveAccount(int id) {
     activeAccountId = id;
     notifyListeners();
+  }
+
+  Future<void> deleteAccount(int id) async {
+    final db = await _database;
+    await db.delete(
+      'transactions',
+      where: "account_id = ?",
+      whereArgs: [id],
+    );
+    await db.delete(
+      'accounts',
+      where: "id = ?",
+      whereArgs: [id],
+    );
+
+    await getAccounts();
+    await getTransactions();
+    changeActiveAccount(0);
+  }
+
+  Future<void> deleteTransaction(TransactionModel transaction) async {
+    final db = await _database;
+    Account account =
+        accounts.where((element) => element.id == transaction.account).first;
+    account.balance = transaction.type == "EXPENSE"
+        ? account.balance + transaction.amount
+        : account.balance - transaction.amount;
+    await db.delete(
+      'transactions',
+      where: "id = ?",
+      whereArgs: [transaction.id],
+    );
+    await db.update(
+      'accounts',
+      {
+        'name': account.name,
+        'balance': account.balance,
+      },
+      where: "id = ?",
+      whereArgs: [transaction.account],
+    );
+    await getAccounts();
+    await getTransactions();
   }
 }

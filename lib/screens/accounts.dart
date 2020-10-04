@@ -224,10 +224,51 @@ class AccountList extends StatefulWidget {
 
 class _AccountListState extends State<AccountList> {
   int _index = 0;
+  PageController pageController = PageController(viewportFraction: 0.5);
+  Future<void> _showDeleteDialog(
+      BuildContext context, String accountName, int accountId) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete $accountName account'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete $accountName?'),
+                Text(
+                    'This will automatically delete the transactions linked with $accountName account.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Provider.of<AccountsState>(context, listen: false)
+                    .deleteAccount(accountId);
+                setState(() {
+                  _index = 0;
+                });
+                pageController.jumpTo(0);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
-  void initState() {
-    super.initState();
-    if (widget.accounts.length > 1) {
+  Widget build(BuildContext context) {
+    if (widget.accounts.length > 1 && widget.accounts[0].id != 0) {
       double sum = 0.0;
       widget.accounts.forEach((element) {
         sum += element.balance;
@@ -235,10 +276,6 @@ class _AccountListState extends State<AccountList> {
       Account allAccount = Account(id: 0, name: 'All Accounts', balance: sum);
       widget.accounts.insert(0, allAccount);
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Stack(
       children: [
         Container(
@@ -246,7 +283,7 @@ class _AccountListState extends State<AccountList> {
             height: 100, // card height
             child: PageView.builder(
               itemCount: widget.accounts.length,
-              controller: PageController(viewportFraction: 0.5),
+              controller: pageController,
               onPageChanged: (int index) {
                 setState(() => _index = index);
                 Provider.of<AccountsState>(context, listen: false)
@@ -255,27 +292,45 @@ class _AccountListState extends State<AccountList> {
               itemBuilder: (_, i) {
                 return Transform.scale(
                   scale: i == _index ? 1 : 0.9,
-                  child: Card(
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            "${widget.accounts[i].name}",
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.left,
-                          ),
-                          Text(
-                            "Rs. ${widget.accounts[i].balance}",
-                            textAlign: TextAlign.right,
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
+                  child: GestureDetector(
+                    onLongPress: () {
+                      if (widget.accounts[i].id != 0 && i == _index)
+                        _showDeleteDialog(context, widget.accounts[i].name,
+                            widget.accounts[i].id);
+                    },
+                    child: Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              "${widget.accounts[i].name}",
+                              style: TextStyle(fontSize: 18),
+                              textAlign: TextAlign.left,
+                            ),
+                            Text(
+                              "Rs. " +
+                                  widget.accounts[i].balance
+                                      .toString()
+                                      .split(".")[0] +
+                                  (widget.accounts[i].balance
+                                              .toString()
+                                              .split(".")[1] ==
+                                          "0"
+                                      ? ""
+                                      : widget.accounts[i].balance
+                                          .toString()
+                                          .split(".")[1]),
+                              textAlign: TextAlign.right,
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -286,7 +341,9 @@ class _AccountListState extends State<AccountList> {
         ),
         Positioned(
           top: 25,
-          left: 25,
+          left: widget.accounts.length == 0
+              ? (MediaQuery.of(context).size.width - 140) / 2
+              : 25,
           child: GestureDetector(
             onTap: () => showModalBottomSheet(
                 context: context,
@@ -298,10 +355,23 @@ class _AccountListState extends State<AccountList> {
                 color: Color(0xFF0078d4),
               ),
               height: 60,
-              width: 60,
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
+              padding: widget.accounts.length == 0
+                  ? EdgeInsets.all(20)
+                  : EdgeInsets.zero,
+              width: widget.accounts.length == 0 ? null : 60,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.accounts.length == 0)
+                    Text('Add account',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                  if (widget.accounts.length == 0) SizedBox(width: 5),
+                  Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
           ),

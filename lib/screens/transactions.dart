@@ -88,6 +88,41 @@ class _TransactionListState extends State<TransactionList> {
     });
   }
 
+  Future<void> _showDeleteDialog(
+      BuildContext context, TransactionModel transaction) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete transaction'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete ${transaction.name}?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Provider.of<AccountsState>(context, listen: false)
+                    .deleteTransaction(transaction);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     int activeId =
@@ -98,67 +133,87 @@ class _TransactionListState extends State<TransactionList> {
             .where((element) => element.id == activeId)
             .toList();
     return Expanded(
-      child: ListView.builder(
-        shrinkWrap: true,
-        controller: scrollController,
-        physics: BouncingScrollPhysics(),
-        itemBuilder: (context, i) {
-          bool showDate = i == 0
-              ? true
-              : transactions[i]
-                          .date
-                          .difference(widget.transactions[i - 1].date)
-                          .inDays !=
-                      0
-                  ? true
-                  : false;
+      child: transactions.length == 0
+          ? Center(
+              child: Text(
+                'No transaction found.',
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          : ListView.builder(
+              shrinkWrap: true,
+              controller: scrollController,
+              physics: BouncingScrollPhysics(),
+              itemBuilder: (context, i) {
+                print('id == ${widget.transactions[i].account}');
+                bool showDate = i == 0
+                    ? true
+                    : transactions[i]
+                                .date
+                                .difference(widget.transactions[i - 1].date)
+                                .inDays !=
+                            0
+                        ? true
+                        : false;
 
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showDate)
-                  Text(
-                      '${transactions[i].date.difference(DateTime.now()).inDays == 0 ? "Today" : transactions[i].date.difference(DateTime.now()).inDays == -1 ? "Yesterday" : DateFormat('dd MMM yyyy').format(transactions[i].date)}',
-                      style: TextStyle(color: Colors.grey, fontSize: 14)),
-                if (showDate) SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      transactions[i].name,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
+                return GestureDetector(
+                  onLongPress: () {
+                    _showDeleteDialog(context, transactions[i]);
+                  },
+                  child: Container(
+                    margin: EdgeInsets.symmetric(vertical: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showDate)
+                          Text(
+                              '${transactions[i].date.difference(DateTime.now()).inDays == 0 ? "Today" : transactions[i].date.difference(DateTime.now()).inDays == -1 ? "Yesterday" : DateFormat('dd MMM yyyy').format(transactions[i].date)}',
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 14)),
+                        if (showDate) SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              transactions[i].name,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Rs. ' +
+                                  transactions[i]
+                                      .amount
+                                      .toString()
+                                      .split(".")[0] +
+                                  (transactions[i]
+                                              .amount
+                                              .toString()
+                                              .split(".")[1] ==
+                                          "0"
+                                      ? ""
+                                      : transactions[i]
+                                          .amount
+                                          .toString()
+                                          .split(".")[1]),
+                              style: TextStyle(
+                                  color: transactions[i].type == "EXPENSE"
+                                      ? Color(0xFFCA5010)
+                                      : Color(0xFF407855),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        if (i == transactions.length - 1) SizedBox(height: 60)
+                      ],
                     ),
-                    Text(
-                      'Rs. ' +
-                          transactions[i].amount.toString().split(".")[0] +
-                          (transactions[i].amount.toString().split(".")[1] ==
-                                  "0"
-                              ? ""
-                              : transactions[i]
-                                  .amount
-                                  .toString()
-                                  .split(".")[1]),
-                      style: TextStyle(
-                          color: transactions[i].type == "EXPENSE"
-                              ? Color(0xFFCA5010)
-                              : Color(0xFF407855),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                if (i == transactions.length - 1) SizedBox(height: 60)
-              ],
+                  ),
+                );
+              },
+              itemCount: transactions.length,
             ),
-          );
-        },
-        itemCount: transactions.length,
-      ),
     );
   }
 }

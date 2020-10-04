@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
                   onPressed: () => showAddScreen(context),
                   child: Icon(
                     Icons.add,
-                    color: Color(0xFF16181C),
+                    color: Colors.white,
                   ),
                   backgroundColor: Color(0xFF0078d4),
                 )
