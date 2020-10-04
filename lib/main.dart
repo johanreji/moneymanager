@@ -28,27 +28,57 @@ class MyApp extends StatelessWidget {
         builder: (context) => AddTransactionScreen());
   }
 
+  Future<void> showAlert(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Add an account before adding a transaction record'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Okay'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Money Manager'),
+        appBar: AppBar(
+          title: Text('Money Manager'),
+          backgroundColor: Color(0xFF16181C),
+        ),
         backgroundColor: Color(0xFF16181C),
-      ),
-      backgroundColor: Color(0xFF16181C),
-      body: SafeArea(child: MainScreen()),
-      floatingActionButton:
-          Provider.of<AccountsState>(context, listen: false).connectedToDB
-              ? FloatingActionButton(
-                  onPressed: () => showAddScreen(context),
-                  child: Icon(
-                    Icons.add,
-                    color: Colors.white,
-                  ),
-                  backgroundColor: Color(0xFF0078d4),
-                )
-              : null,
-    );
+        body: SafeArea(child: MainScreen()),
+        floatingActionButton:
+            Provider.of<AccountsState>(context, listen: false).connectedToDB
+                ? FloatingActionButton(
+                    onPressed: () =>
+                        Provider.of<AccountsState>(context, listen: false)
+                                    .accounts
+                                    .length >
+                                0
+                            ? showAddScreen(context)
+                            : showAlert(context),
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                    backgroundColor: Color(0xFF0078d4),
+                  )
+                : null);
   }
 }
 
@@ -146,7 +176,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         body: SingleChildScrollView(
           child: Container(
             padding: EdgeInsets.all(10),
-            margin: EdgeInsets.only(top: 50),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +348,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 SizedBox(height: 20),
                 Center(
                   child: SizedBox(
-                    width: 150,
+                    width: 100,
                     child: RaisedButton(
                         onPressed: () {
                           if (name == null || name == "")
