@@ -20,30 +20,42 @@ class _AccountsState extends State<Accounts> {
   Widget build(BuildContext context) {
     provider = Provider.of<AccountsState>(context, listen: false);
 
-    return FutureBuilder(
-      future: provider.getAccounts(),
-      builder: (ctx, dataSnapshot) {
-        // Display the waiting progress bar
-        if (dataSnapshot.connectionState == ConnectionState.waiting) {
-          return Text(
-            'Loading..',
-            style: TextStyle(color: Colors.white),
-          );
-        }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(15),
+          child: Text(
+            'Accounts',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+            textAlign: TextAlign.left,
+          ),
+        ),
+        FutureBuilder(
+          future: provider.getAccounts(),
+          builder: (ctx, dataSnapshot) {
+            // Display the waiting progress bar
+            if (dataSnapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-        // Error handling
-        if (dataSnapshot.hasError) {
-          return Text(
-            dataSnapshot.error.toString(),
-            style: TextStyle(color: Colors.white),
-          );
-        }
+            // Error handling
+            if (dataSnapshot.hasError) {
+              return Text(
+                dataSnapshot.error.toString(),
+                style: TextStyle(color: Colors.white),
+              );
+            }
 
-        return Consumer<AccountsState>(
-          builder: (context, accountsState, _) =>
-              AccountList(accountsState.accounts),
-        );
-      },
+            return Consumer<AccountsState>(
+              builder: (context, accountsState, _) =>
+                  AccountList(accountsState.accounts),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -213,16 +225,33 @@ class AccountList extends StatefulWidget {
 class _AccountListState extends State<AccountList> {
   int _index = 0;
   @override
+  void initState() {
+    super.initState();
+    if (widget.accounts.length > 1) {
+      double sum = 0.0;
+      widget.accounts.forEach((element) {
+        sum += element.balance;
+      });
+      Account allAccount = Account(id: 0, name: 'All Accounts', balance: sum);
+      widget.accounts.insert(0, allAccount);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Container(
           child: SizedBox(
-            height: 150, // card height
+            height: 100, // card height
             child: PageView.builder(
               itemCount: widget.accounts.length,
-              controller: PageController(viewportFraction: 0.6),
-              onPageChanged: (int index) => setState(() => _index = index),
+              controller: PageController(viewportFraction: 0.5),
+              onPageChanged: (int index) {
+                setState(() => _index = index);
+                Provider.of<AccountsState>(context, listen: false)
+                    .changeActiveAccount(widget.accounts[index].id);
+              },
               itemBuilder: (_, i) {
                 return Transform.scale(
                   scale: i == _index ? 1 : 0.9,
@@ -238,11 +267,11 @@ class _AccountListState extends State<AccountList> {
                         children: [
                           Text(
                             "${widget.accounts[i].name}",
-                            style: TextStyle(fontSize: 20),
+                            style: TextStyle(fontSize: 18),
                             textAlign: TextAlign.left,
                           ),
                           Text(
-                            "${widget.accounts[i].balance}",
+                            "Rs. ${widget.accounts[i].balance}",
                             textAlign: TextAlign.right,
                             style: TextStyle(fontSize: 14),
                           ),
@@ -256,8 +285,8 @@ class _AccountListState extends State<AccountList> {
           ),
         ),
         Positioned(
-          top: 60,
-          left: 16,
+          top: 25,
+          left: 25,
           child: GestureDetector(
             onTap: () => showModalBottomSheet(
                 context: context,
@@ -266,10 +295,10 @@ class _AccountListState extends State<AccountList> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(50),
-                color: Colors.grey,
+                color: Color(0xFF0078d4),
               ),
-              height: 50,
-              width: 50,
+              height: 60,
+              width: 60,
               child: Icon(
                 Icons.add,
                 color: Colors.white,
