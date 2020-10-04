@@ -1,100 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:moneymanagerv3/models/account.dart';
 import 'package:moneymanagerv3/providers/accounts.dart';
-import 'package:moneymanagerv3/screens/accounts.dart';
-import 'package:moneymanagerv3/screens/transactions.dart';
 import 'package:provider/provider.dart';
-import 'models/account.dart';
 
-void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => AccountsState(),
-      child: MyApp(),
-    ),
-  );
+class Accounts extends StatefulWidget {
+  @override
+  _AccountsState createState() => _AccountsState();
 }
 
-class MyApp extends StatelessWidget {
-//
-//  void showAddScreen(BuildContext context) {
-//    showModalBottomSheet(
-//        context: context,
-//        isScrollControlled: true,
-//        builder: (BuildContext context) => AddTransactionScreen());
-//  }
+class _AccountsState extends State<Accounts> {
+  var provider;
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: Scaffold(
-          appBar: AppBar(
-            title: Text('Money Manager'),
-            backgroundColor: Color(0xFF16181C),
-          ),
-          backgroundColor: Color(0xFF16181C),
-          body: MainScreen()
-//        floatingActionButton: connectedToDB
-//            ? FloatingActionButton(
-//                onPressed: () {
-//                  showAddScreen(context);
-//                },
-//                child: Icon(
-//                  Icons.add,
-//                  color: Color(0xFF16181C),
-//                ),
-//                backgroundColor: Colors.white,
-//              )
-//            : null,
-          ),
+    provider = Provider.of<AccountsState>(context, listen: false);
+
+    return FutureBuilder(
+      future: provider.getAccounts(),
+      builder: (ctx, dataSnapshot) {
+        // Display the waiting progress bar
+        if (dataSnapshot.connectionState == ConnectionState.waiting) {
+          return Text(
+            'Loading..',
+            style: TextStyle(color: Colors.white),
+          );
+        }
+
+        // Error handling
+        if (dataSnapshot.hasError) {
+          return Text(
+            dataSnapshot.error.toString(),
+            style: TextStyle(color: Colors.white),
+          );
+        }
+
+        return Consumer<AccountsState>(
+          builder: (context, accountsState, _) =>
+              AccountList(accountsState.accounts),
+        );
+      },
     );
   }
 }
 
-class MainScreen extends StatefulWidget {
+class AddAccountScreen extends StatefulWidget {
   @override
-  _MainScreenState createState() => _MainScreenState();
+  _AddAccountScreenState createState() => _AddAccountScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  bool connectedToDB = false;
-  var provider;
-  @override
-  Widget build(BuildContext context) {
-    if (provider == null) {
-      provider = Provider.of<AccountsState>(context, listen: false);
-      provider.initializeAccountTable().then((value) {
-        setState(() {
-          connectedToDB = value;
-        });
-      });
-    }
-    return Container(
-        child: connectedToDB
-            ? Column(
-                children: [
-                  Accounts(),
-                  Transactions(),
-                ],
-              )
-            : Center(child: CircularProgressIndicator()));
-  }
-}
-
-class AddTransactionScreen extends StatefulWidget {
-  @override
-  _AddTransactionScreenState createState() => _AddTransactionScreenState();
-}
-
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
-  String name;
-  double balance;
-  bool _validatedBalance = false;
+class _AddAccountScreenState extends State<AddAccountScreen> {
   bool _validatedName = false;
+  bool _validatedBalance = false;
   bool _negative = false;
+  double balance = 0.0;
+  String name = "";
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -235,6 +199,85 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AccountList extends StatefulWidget {
+  final List<Account> accounts;
+  AccountList(this.accounts);
+  @override
+  _AccountListState createState() => _AccountListState();
+}
+
+class _AccountListState extends State<AccountList> {
+  int _index = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          child: SizedBox(
+            height: 150, // card height
+            child: PageView.builder(
+              itemCount: widget.accounts.length,
+              controller: PageController(viewportFraction: 0.6),
+              onPageChanged: (int index) => setState(() => _index = index),
+              itemBuilder: (_, i) {
+                return Transform.scale(
+                  scale: i == _index ? 1 : 0.9,
+                  child: Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "${widget.accounts[i].name}",
+                            style: TextStyle(fontSize: 20),
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            "${widget.accounts[i].balance}",
+                            textAlign: TextAlign.right,
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Positioned(
+          top: 60,
+          left: 16,
+          child: GestureDetector(
+            onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) => AddAccountScreen()),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: Colors.grey,
+              ),
+              height: 50,
+              width: 50,
+              child: Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
