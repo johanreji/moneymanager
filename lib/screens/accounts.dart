@@ -87,6 +87,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               children: [
                 TextField(
                   cursorColor: Colors.white,
+                  textCapitalization: TextCapitalization.sentences,
                   style: TextStyle(color: Colors.white),
                   onChanged: (value) {
                     setState(() {

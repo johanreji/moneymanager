@@ -151,48 +151,75 @@ class _TransactionListState extends State<TransactionList> {
                     _showDeleteDialog(context, transactions[i]);
                   },
                   child: Container(
-                    margin: EdgeInsets.symmetric(vertical: 15),
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    padding: EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                        border: Border(
+                            bottom: (i == transactions.length - 1)
+                                ? BorderSide.none
+                                : BorderSide(color: Colors.white70))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (showDate)
                           Text(
                               '${transactions[i].date.difference(DateTime.now()).inDays == 0 ? "Today" : transactions[i].date.difference(DateTime.now()).inDays == -1 ? "Yesterday" : DateFormat('dd MMM yyyy').format(transactions[i].date)}',
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 14)),
-                        if (showDate) SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              transactions[i].name,
                               style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Rs. ' +
-                                  transactions[i]
-                                      .amount
-                                      .toString()
-                                      .split(".")[0] +
-                                  (transactions[i]
-                                              .amount
-                                              .toString()
-                                              .split(".")[1] ==
-                                          "0"
-                                      ? ""
-                                      : transactions[i]
+                                  color: Colors.blue[800], fontSize: 14)),
+                        if (showDate) SizedBox(height: 15),
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  transactions[i].name,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'Rs. ' +
+                                      transactions[i]
                                           .amount
                                           .toString()
-                                          .split(".")[1]),
-                              style: TextStyle(
-                                  color: transactions[i].type == "EXPENSE"
-                                      ? Color(0xFFCA5010)
-                                      : Color(0xFF407855),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
+                                          .split(".")[0] +
+                                      (transactions[i]
+                                                  .amount
+                                                  .toString()
+                                                  .split(".")[1] ==
+                                              "0"
+                                          ? ""
+                                          : transactions[i]
+                                              .amount
+                                              .toString()
+                                              .split(".")[1]),
+                                  style: TextStyle(
+                                      color: transactions[i].type == "EXPENSE"
+                                          ? Color(0xFFCA5010)
+                                          : Color(0xFF407855),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Spacer(),
+                                Text(
+                                  (transactions[i].type == "EXPENSE"
+                                          ? 'From '
+                                          : 'To ') +
+                                      transactions[i].accountName,
+                                  style: TextStyle(
+                                      color: Colors.blue[800],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
                           ],
                         ),

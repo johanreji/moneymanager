@@ -294,6 +294,32 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
                 SizedBox(height: 10),
                 TextField(
+                  cursorColor: Colors.white,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    setState(() {
+                      name = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 1),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 1),
+                    ),
+                    errorBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red, width: 1),
+                    ),
+                    errorText:
+                        _validatedName ? "Transaction name required" : null,
+                    labelStyle: TextStyle(color: Colors.white),
+                    labelText: 'Transaction Name',
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
                   keyboardType: TextInputType.numberWithOptions(
                     signed: false,
                   ),
@@ -319,31 +345,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         : _negative ? "Negative number not allowed" : null,
                     labelStyle: TextStyle(color: Colors.white),
                     labelText: 'Amount',
-                  ),
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  cursorColor: Colors.white,
-                  style: TextStyle(color: Colors.white),
-                  onChanged: (value) {
-                    setState(() {
-                      name = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    errorBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.red, width: 1),
-                    ),
-                    errorText:
-                        _validatedName ? "Transaction name required" : null,
-                    labelStyle: TextStyle(color: Colors.white),
-                    labelText: 'Transaction Name',
                   ),
                 ),
                 SizedBox(height: 20),
