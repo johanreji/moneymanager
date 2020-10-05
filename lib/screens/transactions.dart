@@ -120,7 +120,7 @@ class _TransactionListState extends State<TransactionList> {
     List<TransactionModel> transactions = activeId == 0
         ? widget.transactions
         : widget.transactions
-            .where((element) => element.id == activeId)
+            .where((element) => element.account == activeId)
             .toList();
     return Expanded(
       child: transactions.length == 0
