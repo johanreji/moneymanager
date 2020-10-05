@@ -267,7 +267,8 @@ class _AccountListState extends State<AccountList> {
       children: [
         Container(
           child: SizedBox(
-            height: 100, // card height
+            height: 130,
+            // card height
             child: PageView.builder(
               itemCount: widget.accounts.length,
               controller: pageController,
@@ -285,40 +286,60 @@ class _AccountListState extends State<AccountList> {
                         _showDeleteDialog(context, widget.accounts[i].name,
                             widget.accounts[i].id);
                     },
-                    child: Card(
-                      elevation: 6,
-                      color: Colors.white70,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              "${widget.accounts[i].name}",
-                              style: TextStyle(fontSize: 18),
-                              textAlign: TextAlign.left,
-                            ),
-                            Text(
-                              "Rs. " +
-                                  widget.accounts[i].balance
-                                      .toString()
-                                      .split(".")[0] +
-                                  (widget.accounts[i].balance
-                                              .toString()
-                                              .split(".")[1] ==
-                                          "0"
-                                      ? ""
-                                      : widget.accounts[i].balance
-                                          .toString()
-                                          .split(".")[1]),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(vertical: 15, horizontal: 5),
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment(-1.0, -4.0),
+                              end: Alignment(1.0, 4.0),
+                              colors: [
+                                Color(0xFF141619),
+                                Color(0xFF181a1e),
+                              ]),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: i == _index
+                                    ? Colors.blue[800]
+                                    : Color(0xFF131418),
+                                offset: Offset(1.0, 1.0),
+                                blurRadius: i == _index ? 5.0 : 15,
+                                spreadRadius: i == _index ? 0 : 1),
+                            BoxShadow(
+                                color: i == _index
+                                    ? Colors.blue[800]
+                                    : Color(0xFF131418),
+                                offset: Offset(-1.0, -1.0),
+                                blurRadius: i == _index ? 5.0 : 15,
+                                spreadRadius: i == _index ? 0 : 1),
+                          ]),
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "${widget.accounts[i].name}",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            "Rs. " +
+                                widget.accounts[i].balance
+                                    .toString()
+                                    .split(".")[0] +
+                                (widget.accounts[i].balance
+                                            .toString()
+                                            .split(".")[1] ==
+                                        "0"
+                                    ? ""
+                                    : widget.accounts[i].balance
+                                        .toString()
+                                        .split(".")[1]),
+                            textAlign: TextAlign.right,
+                            style: TextStyle(fontSize: 14, color: Colors.white),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -328,7 +349,7 @@ class _AccountListState extends State<AccountList> {
           ),
         ),
         Positioned(
-          top: 25,
+          top: 40,
           left: widget.accounts.length == 0
               ? (MediaQuery.of(context).size.width - 140) / 2
               : 25,
@@ -340,7 +361,7 @@ class _AccountListState extends State<AccountList> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(50),
-                color: Color(0xFF0078d4),
+                color: Colors.blue[800],
               ),
               height: 60,
               padding: widget.accounts.length == 0

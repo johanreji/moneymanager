@@ -155,7 +155,7 @@ class _MyAppState extends State<MyApp> {
                   Icons.add,
                   color: Colors.white,
                 ),
-                backgroundColor: Color(0xFF0078d4),
+                backgroundColor: Colors.blue[800],
               )
             : null);
   }

@@ -17,7 +17,7 @@ class Transactions extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           children: [
             Container(
-              padding: EdgeInsets.symmetric(vertical: 15),
+              padding: EdgeInsets.only(bottom: 5),
               child: Text(
                 'Transactions',
                 style: TextStyle(color: Colors.white, fontSize: 20),
@@ -160,7 +160,7 @@ class _TransactionListState extends State<TransactionList> {
                               '${transactions[i].date.difference(DateTime.now()).inDays == 0 ? "Today" : transactions[i].date.difference(DateTime.now()).inDays == -1 ? "Yesterday" : DateFormat('dd MMM yyyy').format(transactions[i].date)}',
                               style:
                                   TextStyle(color: Colors.grey, fontSize: 14)),
-                        if (showDate) SizedBox(height: 5),
+                        if (showDate) SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
