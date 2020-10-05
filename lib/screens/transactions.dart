@@ -146,6 +146,7 @@ class _TransactionListState extends State<TransactionList> {
                         : false;
 
                 return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onLongPress: () {
                     _showDeleteDialog(context, transactions[i]);
                   },
