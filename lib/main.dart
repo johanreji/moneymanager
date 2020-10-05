@@ -20,7 +20,15 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool connectedToDB = false;
+  var provider;
+
   void showAddScreen(BuildContext context) {
     showModalBottomSheet(
         context: context,
@@ -55,43 +63,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('Money Manager'),
-          backgroundColor: Color(0xFF16181C),
-        ),
-        backgroundColor: Color(0xFF16181C),
-        body: SafeArea(child: MainScreen()),
-        floatingActionButton:
-            Provider.of<AccountsState>(context, listen: false).connectedToDB
-                ? FloatingActionButton(
-                    onPressed: () =>
-                        Provider.of<AccountsState>(context, listen: false)
-                                    .accounts
-                                    .length >
-                                0
-                            ? showAddScreen(context)
-                            : showAlert(context),
-                    child: Icon(
-                      Icons.add,
-                      color: Colors.white,
-                    ),
-                    backgroundColor: Color(0xFF0078d4),
-                  )
-                : null);
-  }
-}
-
-class MainScreen extends StatefulWidget {
-  @override
-  _MainScreenState createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  bool connectedToDB = false;
-  var provider;
-  @override
-  Widget build(BuildContext context) {
     if (provider == null || connectedToDB == false) {
       provider = Provider.of<AccountsState>(context, listen: false);
       provider.initializeAccountTable().then((value) {
@@ -100,15 +71,47 @@ class _MainScreenState extends State<MainScreen> {
         });
       });
     }
-    return Container(
-        child: connectedToDB
-            ? Column(
-                children: [
-                  Accounts(),
-                  Transactions(),
-                ],
+    return Scaffold(
+        appBar: AppBar(
+          title: Text('Money Manager'),
+          backgroundColor: Color(0xFF16181C),
+        ),
+        backgroundColor: Color(0xFF16181C),
+        body: SafeArea(
+            child: connectedToDB
+                ? MainScreen()
+                : Center(
+                    child: CircularProgressIndicator(),
+                  )),
+        floatingActionButton: connectedToDB
+            ? FloatingActionButton(
+                onPressed: () =>
+                    Provider.of<AccountsState>(context, listen: false)
+                                .accounts
+                                .length >
+                            0
+                        ? showAddScreen(context)
+                        : showAlert(context),
+                child: Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
+                backgroundColor: Color(0xFF0078d4),
               )
-            : Center(child: CircularProgressIndicator()));
+            : null);
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        child: Column(
+      children: [
+        Accounts(),
+        Transactions(),
+      ],
+    ));
   }
 }
 
@@ -322,6 +325,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   style: TextStyle(color: Color(0xFF16181C)),
                   items: Provider.of<AccountsState>(context, listen: false)
                       .accounts
+                      .where((element) => element.id != 0)
                       .map(
                     (val) {
                       return DropdownMenuItem<String>(

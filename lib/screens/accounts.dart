@@ -4,22 +4,9 @@ import 'package:moneymanagerv3/models/account.dart';
 import 'package:moneymanagerv3/providers/accounts.dart';
 import 'package:provider/provider.dart';
 
-class Accounts extends StatefulWidget {
-  @override
-  _AccountsState createState() => _AccountsState();
-}
-
-class _AccountsState extends State<Accounts> {
-  var provider;
-  @override
-  void initState() {
-    super.initState();
-  }
-
+class Accounts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    provider = Provider.of<AccountsState>(context, listen: false);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -32,7 +19,8 @@ class _AccountsState extends State<Accounts> {
           ),
         ),
         FutureBuilder(
-          future: provider.getAccounts(),
+          future:
+              Provider.of<AccountsState>(context, listen: false).getAccounts(),
           builder: (ctx, dataSnapshot) {
             // Display the waiting progress bar
             if (dataSnapshot.connectionState == ConnectionState.waiting) {

@@ -10,7 +10,6 @@ class AccountsState extends ChangeNotifier {
   Future<Database> _database;
   List<Account> accounts = [];
   List<TransactionModel> transactions = [];
-  bool connectedToDB = false;
   bool hideAccount = false;
   int activeAccountId;
   static Future _onConfigure(Database db) async {
@@ -33,7 +32,6 @@ class AccountsState extends ChangeNotifier {
       onConfigure: _onConfigure,
       version: 1,
     );
-    connectedToDB = true;
     notifyListeners();
     return true;
   }

@@ -4,17 +4,7 @@ import 'package:moneymanagerv3/models/Transaction.dart';
 import 'package:moneymanagerv3/providers/accounts.dart';
 import 'package:provider/provider.dart';
 
-class Transactions extends StatefulWidget {
-  @override
-  _TransactionsState createState() => _TransactionsState();
-}
-
-class _TransactionsState extends State<Transactions> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
+class Transactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -145,7 +135,6 @@ class _TransactionListState extends State<TransactionList> {
               controller: scrollController,
               physics: BouncingScrollPhysics(),
               itemBuilder: (context, i) {
-                print('id == ${widget.transactions[i].account}');
                 bool showDate = i == 0
                     ? true
                     : transactions[i]
