@@ -5,6 +5,7 @@ import 'package:moneymanagerv3/screens/transactions.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:moneymanagerv3/models/Transaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(
@@ -28,7 +29,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool connectedToDB = false;
   var provider;
-
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  bool isFirstTime = true;
   void showAddScreen(BuildContext context) {
     showModalBottomSheet(
         context: context,
@@ -41,6 +43,13 @@ class _MyAppState extends State<MyApp> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.info, color: Color(0xFF0078d4)),
+              SizedBox(width: 10),
+              Text('Info', style: TextStyle(color: Color(0xFF0078d4)))
+            ],
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -59,6 +68,56 @@ class _MyAppState extends State<MyApp> {
         );
       },
     );
+  }
+
+  Future<void> showTutorialAlert() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.info, color: Color(0xFF0078d4)),
+              SizedBox(width: 10),
+              Text('Info', style: TextStyle(color: Color(0xFF0078d4)))
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Long press on an account card or a transaction to delete it'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Okay'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> checkIfFirstTime() async {
+    final SharedPreferences prefs = await _prefs;
+    setState(() {
+      isFirstTime = prefs.get('isFirst') ?? true;
+    });
+    if (isFirstTime) {
+      prefs.setBool('isFirst', false);
+      showTutorialAlert();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfFirstTime();
   }
 
   @override
@@ -425,6 +484,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class OnboardingScreens extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(),
     );
   }
 }
