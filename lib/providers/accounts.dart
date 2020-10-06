@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:moneymanagerv3/models/Transaction.dart';
 import 'package:moneymanagerv3/models/account.dart';
+import 'package:moneymanagerv3/models/tags.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -10,6 +11,7 @@ class AccountsState extends ChangeNotifier {
   Future<Database> _database;
   List<Account> accounts = [];
   List<TransactionModel> transactions = [];
+  List<Tag> tags = [];
   bool hideAccount = false;
   int activeAccountId;
   static Future _onConfigure(Database db) async {
@@ -22,6 +24,12 @@ class AccountsState extends ChangeNotifier {
     );
     await db.execute(
       "CREATE TABLE transactions(id INTEGER PRIMARY KEY, name TEXT, amount REAL, type TEXT, date INTEGER, account_id INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id))",
+    );
+    await db.execute(
+      "CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, used_count INTEGER)",
+    );
+    await db.execute(
+      "CREATE TABLE transaction_tag_map(id INTEGER PRIMARY KEY, transaction_id INTEGER, tag_id INTEGER, FOREIGN KEY(tag_id) REFERENCES tags(id), FOREIGN KEY(transaction_id) REFERENCES transactions(id))",
     );
   }
 
@@ -62,7 +70,7 @@ class AccountsState extends ChangeNotifier {
         ? account.balance - transaction.amount
         : account.balance + transaction.amount;
     try {
-      await db.insert(
+      int transactionId = await db.insert(
         'transactions',
         {
           'name': transaction.name,
@@ -73,21 +81,67 @@ class AccountsState extends ChangeNotifier {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      await db.update(
-        'accounts',
-        {
-          'name': account.name,
-          'balance': account.balance,
-        },
-        where: "id = ?",
-        whereArgs: [account.id],
-      );
+      if (transactionId != -1)
+        await db.update(
+          'accounts',
+          {
+            'name': account.name,
+            'balance': account.balance,
+          },
+          where: "id = ?",
+          whereArgs: [account.id],
+        );
+      if (transactionId != -1)
+        transaction.tagIds.forEach((tagId) async {
+          await db.insert(
+            'transaction_tag_map',
+            {
+              'tag_id': tagId,
+              'transaction_id': transactionId,
+            },
+          );
+        });
       await getAccounts();
       await getTransactions();
       return true;
     } catch (err) {
       return false;
     }
+  }
+
+  Future<bool> addTag(String name) async {
+    final Database db = await _database;
+    try {
+      await db.insert(
+        'tags',
+        {
+          'name': name,
+          'used_count': 0,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      await getTags();
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  Future<void> getTags() async {
+    final Database db = await _database;
+
+    final List<Map<String, dynamic>> maps =
+        await db?.query('tags', orderBy: 'used_count DESC');
+
+    tags = List.generate(maps.length, (i) {
+      return Tag(
+        id: maps[i]['id'],
+        name: maps[i]['name'],
+        usedCount: maps[i]['used_count'],
+      );
+    });
+    notifyListeners();
+    return;
   }
 
   Future<void> getAccounts() async {
@@ -188,5 +242,21 @@ class AccountsState extends ChangeNotifier {
     );
     await getAccounts();
     await getTransactions();
+  }
+
+  Future<void> deleteTag(int id) async {
+    final db = await _database;
+    await db.delete(
+      'transaction_tag_map',
+      where: "tag_id = ?",
+      whereArgs: [id],
+    );
+    await db.delete(
+      'tags',
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    await getTags();
+    return;
   }
 }

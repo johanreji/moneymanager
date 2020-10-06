@@ -6,6 +6,7 @@ class TransactionModel {
   DateTime date;
   int account;
   String accountName;
+  List<int> tagIds;
   TransactionModel(
       {this.id,
       this.name,
@@ -13,5 +14,6 @@ class TransactionModel {
       this.type,
       this.date,
       this.account,
-      this.accountName});
+      this.accountName,
+      this.tagIds});
 }

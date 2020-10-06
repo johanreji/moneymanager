@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:moneymanagerv3/models/Transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'models/tags.dart';
 
 void main() {
   runApp(
@@ -348,24 +349,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
-                TextField(
-                  cursorColor: Colors.white,
-                  style: TextStyle(color: Colors.white),
-                  onTap: () => _selectDate(context),
-                  readOnly: true,
-                  controller: dateController,
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    labelStyle: TextStyle(color: Colors.white),
-                    labelText: 'Date',
-                  ),
-                ),
-                SizedBox(height: 20),
                 DropdownButton(
                   hint: accountSelected == null
                       ? Text(
@@ -409,6 +392,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     );
                   },
                 ),
+                SizedBox(height: 10),
+                TextField(
+                  cursorColor: Colors.white,
+                  style: TextStyle(color: Colors.white),
+                  onTap: () => _selectDate(context),
+                  readOnly: true,
+                  controller: dateController,
+                  decoration: InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 1),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 1),
+                    ),
+                    labelStyle: TextStyle(color: Colors.white),
+                    labelText: 'Date',
+                  ),
+                ),
+                SizedBox(height: 20),
+                TagsSection(),
                 SizedBox(height: 20),
                 Center(
                   child: SizedBox(
@@ -494,6 +497,182 @@ class OnboardingScreens extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: Column(),
+    );
+  }
+}
+
+class TagsSection extends StatefulWidget {
+  @override
+  _TagsSectionState createState() => _TagsSectionState();
+}
+
+class _TagsSectionState extends State<TagsSection> {
+  Widget _futureBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    _futureBuilder = _futureBuilder != null
+        ? _futureBuilder
+        : FutureBuilder(
+            future:
+                Provider.of<AccountsState>(context, listen: false).getTags(),
+            builder: (context, dataSnapshot) {
+              if (dataSnapshot.connectionState == ConnectionState.waiting ||
+                  dataSnapshot.hasError) {
+                return Container();
+              }
+              return Consumer<AccountsState>(
+                builder: (context, accountsState, _) =>
+                    TagData(accountsState.tags),
+              );
+            },
+          );
+    return _futureBuilder;
+  }
+}
+
+class TagData extends StatefulWidget {
+  final List<Tag> tags;
+  TagData(this.tags);
+  @override
+  _TagDataState createState() => _TagDataState();
+}
+
+class _TagDataState extends State<TagData> {
+  bool tagInsertionLoading = false;
+  TextEditingController tagController = TextEditingController();
+
+  void addTag(BuildContext context) {
+    if (tagController.text.trim() == "") return;
+    setState(() {
+      tagInsertionLoading = true;
+    });
+    Provider.of<AccountsState>(context, listen: false)
+        .addTag(tagController.text.trim())
+        .then((value) {
+      setState(() {
+        tagInsertionLoading = false;
+      });
+      tagController.clear();
+      if (!value) {
+        final snackBar = SnackBar(
+          content: Text('Error adding tag!'),
+          action: SnackBarAction(label: 'Okay', onPressed: () {}),
+        );
+        Scaffold.of(context).showSnackBar(snackBar);
+      }
+    });
+  }
+
+  Future<void> _showDeleteDialog(BuildContext context, Tag tag) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Tag'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete ${tag.name}?'),
+                Text('It will be automatically removed from all transactions'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Provider.of<AccountsState>(context, listen: false)
+                    .deleteTag(tag.id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.tags.length > 0)
+          Text('Select Tags',
+              style: TextStyle(color: Colors.white, fontSize: 16)),
+        if (widget.tags.length > 0)
+          Container(
+            height: 40.0,
+            child: ListView.separated(
+              separatorBuilder: (context, index) => SizedBox(width: 5),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) => GestureDetector(
+                onLongPress: () {
+                  _showDeleteDialog(context, widget.tags[index]);
+                },
+                onTap: () {
+                  setState(() {
+                    widget.tags[index].isSelected =
+                        !widget.tags[index].isSelected;
+                  });
+                },
+                child: Chip(
+                    shape: StadiumBorder(side: BorderSide(color: Colors.white)),
+                    backgroundColor: widget.tags[index].isSelected
+                        ? Colors.white
+                        : Color(0xFF16181C),
+                    label: Text('${widget.tags[index].name}',
+                        style: TextStyle(
+                            color: widget.tags[index].isSelected
+                                ? Color(0xFF16181C)
+                                : Colors.white))),
+              ),
+              itemCount: widget.tags.length,
+            ),
+          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: tagController,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white, width: 1),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white, width: 1),
+                  ),
+                  errorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red, width: 1),
+                  ),
+                  labelStyle: TextStyle(color: Colors.white),
+                  labelText:
+                      widget.tags.length > 0 ? 'Or Add a new Tag' : 'Add a Tag',
+                ),
+                onSubmitted: (value) => addTag(context),
+              ),
+            ),
+            SizedBox(width: 10),
+            FlatButton(
+              onPressed: () => addTag(context),
+              child: Text(tagInsertionLoading ? 'Loading' : 'Add',
+                  style: TextStyle(color: Color(0xFF16181C))),
+              color: Colors.white,
+            )
+          ],
+        ),
+      ],
     );
   }
 }
