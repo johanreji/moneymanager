@@ -33,6 +33,7 @@ class _MyAppState extends State<MyApp> {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool isFirstTime = true;
   void showAddScreen(BuildContext context) {
+    Provider.of<AccountsState>(context, listen: false).clearSelectedTags();
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -236,254 +237,256 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           backgroundColor: Color(0xFF16181C),
         ),
         backgroundColor: Color(0xFF16181C),
-        body: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Center(
-                  child: ToggleButtons(
-                    children: <Widget>[
-                      Row(
-                        children: [
-                          SizedBox(width: 20),
-                          Text('Expense',
-                              style: TextStyle(
-                                  color: _selection[0]
-                                      ? Color(0xFF16181C)
-                                      : Colors.white)),
-                          Icon(Icons.expand_less,
-                              color: _selection[0]
-                                  ? Color(0xFF16181C)
-                                  : Colors.white),
-                          SizedBox(width: 10),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(width: 10),
-                          Icon(Icons.expand_more,
-                              color: _selection[1]
-                                  ? Color(0xFF16181C)
-                                  : Colors.white),
-                          Text('Income',
-                              style: TextStyle(
-                                  color: _selection[1]
-                                      ? Color(0xFF16181C)
-                                      : Colors.white)),
-                          SizedBox(width: 20),
-                        ],
-                      ),
-                    ],
-                    color: Color(0xFF16181C),
-                    selectedBorderColor: Colors.white,
-                    borderColor: Colors.white,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    borderWidth: 2,
-                    isSelected: _selection,
-                    onPressed: (int index) {
+        body: Builder(
+          builder: (ctx) => SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.all(10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Center(
+                    child: ToggleButtons(
+                      children: <Widget>[
+                        Row(
+                          children: [
+                            SizedBox(width: 20),
+                            Text('Expense',
+                                style: TextStyle(
+                                    color: _selection[0]
+                                        ? Color(0xFF16181C)
+                                        : Colors.white)),
+                            Icon(Icons.expand_less,
+                                color: _selection[0]
+                                    ? Color(0xFF16181C)
+                                    : Colors.white),
+                            SizedBox(width: 10),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            Icon(Icons.expand_more,
+                                color: _selection[1]
+                                    ? Color(0xFF16181C)
+                                    : Colors.white),
+                            Text('Income',
+                                style: TextStyle(
+                                    color: _selection[1]
+                                        ? Color(0xFF16181C)
+                                        : Colors.white)),
+                            SizedBox(width: 20),
+                          ],
+                        ),
+                      ],
+                      color: Color(0xFF16181C),
+                      selectedBorderColor: Colors.white,
+                      borderColor: Colors.white,
+                      fillColor: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      borderWidth: 2,
+                      isSelected: _selection,
+                      onPressed: (int index) {
+                        setState(() {
+                          _selection[0] = index == 0 ? true : false;
+                          _selection[1] = index == 1 ? true : false;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    cursorColor: Colors.white,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: TextStyle(color: Colors.white),
+                    onChanged: (value) {
                       setState(() {
-                        _selection[0] = index == 0 ? true : false;
-                        _selection[1] = index == 1 ? true : false;
+                        name = value;
                       });
                     },
+                    decoration: InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      errorBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red, width: 1),
+                      ),
+                      errorText:
+                          _validatedName ? "Transaction name required" : null,
+                      labelStyle: TextStyle(color: Colors.white),
+                      labelText: 'Transaction Name',
+                    ),
                   ),
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  cursorColor: Colors.white,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(color: Colors.white),
-                  onChanged: (value) {
-                    setState(() {
-                      name = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
+                  SizedBox(height: 10),
+                  TextField(
+                    keyboardType: TextInputType.numberWithOptions(
+                      signed: false,
                     ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
+                    onChanged: (value) {
+                      setState(() {
+                        amount = value.isEmpty ? null : double.parse(value);
+                      });
+                    },
+                    cursorColor: Colors.white,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      errorBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red, width: 1),
+                      ),
+                      errorText: _validatedAmount
+                          ? "Amount required"
+                          : _negative ? "Negative number not allowed" : null,
+                      labelStyle: TextStyle(color: Colors.white),
+                      labelText: 'Amount',
                     ),
-                    errorBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.red, width: 1),
-                    ),
-                    errorText:
-                        _validatedName ? "Transaction name required" : null,
-                    labelStyle: TextStyle(color: Colors.white),
-                    labelText: 'Transaction Name',
                   ),
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  keyboardType: TextInputType.numberWithOptions(
-                    signed: false,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      amount = value.isEmpty ? null : double.parse(value);
-                    });
-                  },
-                  cursorColor: Colors.white,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    errorBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.red, width: 1),
-                    ),
-                    errorText: _validatedAmount
-                        ? "Amount required"
-                        : _negative ? "Negative number not allowed" : null,
-                    labelStyle: TextStyle(color: Colors.white),
-                    labelText: 'Amount',
-                  ),
-                ),
-                SizedBox(height: 20),
-                DropdownButton(
-                  hint: accountSelected == null
-                      ? Text(
-                          'Select an Account',
-                          style: TextStyle(
-                              color: _validatedAccount
-                                  ? Colors.red
-                                  : Colors.white),
-                        )
-                      : Text(
-                          accountSelected,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                  dropdownColor: Colors.white,
-                  isExpanded: true,
-                  iconSize: 30.0,
-                  style: TextStyle(color: Color(0xFF16181C)),
-                  items: Provider.of<AccountsState>(context, listen: false)
-                      .accounts
-                      .where((element) => element.id != 0)
-                      .map(
-                    (val) {
-                      return DropdownMenuItem<String>(
-                        value: val.id.toString(),
-                        child: Text(val.name,
-                            style: TextStyle(color: Color(0xFF16181C))),
+                  SizedBox(height: 20),
+                  DropdownButton(
+                    hint: accountSelected == null
+                        ? Text(
+                            'Select an Account',
+                            style: TextStyle(
+                                color: _validatedAccount
+                                    ? Colors.red
+                                    : Colors.white),
+                          )
+                        : Text(
+                            accountSelected,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                    dropdownColor: Colors.white,
+                    isExpanded: true,
+                    iconSize: 30.0,
+                    style: TextStyle(color: Color(0xFF16181C)),
+                    items: Provider.of<AccountsState>(context, listen: false)
+                        .accounts
+                        .where((element) => element.id != 0)
+                        .map(
+                      (val) {
+                        return DropdownMenuItem<String>(
+                          value: val.id.toString(),
+                          child: Text(val.name,
+                              style: TextStyle(color: Color(0xFF16181C))),
+                        );
+                      },
+                    ).toList(),
+                    onChanged: (val) {
+                      setState(
+                        () {
+                          accountSelected = Provider.of<AccountsState>(context,
+                                  listen: false)
+                              .accounts
+                              .where((element) => element.id == int.parse(val))
+                              .first
+                              .name;
+                          accountIDSelected = int.parse(val);
+                        },
                       );
                     },
-                  ).toList(),
-                  onChanged: (val) {
-                    setState(
-                      () {
-                        accountSelected = Provider.of<AccountsState>(context,
-                                listen: false)
-                            .accounts
-                            .where((element) => element.id == int.parse(val))
-                            .first
-                            .name;
-                        accountIDSelected = int.parse(val);
-                      },
-                    );
-                  },
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  cursorColor: Colors.white,
-                  style: TextStyle(color: Colors.white),
-                  onTap: () => _selectDate(context),
-                  readOnly: true,
-                  controller: dateController,
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white, width: 1),
-                    ),
-                    labelStyle: TextStyle(color: Colors.white),
-                    labelText: 'Date',
                   ),
-                ),
-                SizedBox(height: 20),
-                TagsSection(),
-                SizedBox(height: 20),
-                Center(
-                  child: SizedBox(
-                    width: 100,
-                    child: RaisedButton(
-                        onPressed: () {
-                          if (name == null || name == "")
-                            setState(() {
-                              _validatedName = true;
-                            });
-                          else
-                            setState(() {
-                              _validatedName = false;
-                            });
-                          if (amount == null)
-                            setState(() {
-                              _validatedAmount = true;
-                            });
-                          else
-                            setState(() {
-                              _validatedAmount = false;
-                            });
-                          if (amount == null || amount < 0.0)
-                            setState(() {
-                              _negative = true;
-                            });
-                          else
-                            setState(() {
-                              _negative = false;
-                            });
-                          if (accountSelected == null)
-                            setState(() {
-                              _validatedAccount = true;
-                            });
-                          else
-                            setState(() {
-                              _validatedAccount = false;
-                            });
-                          if (!_negative &&
-                              !_validatedAmount &&
-                              !_validatedName &&
-                              !_validatedAccount) {
-                            TransactionModel transaction = TransactionModel(
-                                name: name,
-                                amount: amount,
-                                date: date,
-                                type: _selection[0] ? "EXPENSE" : "INCOME",
-                                account: accountIDSelected);
-                            Provider.of<AccountsState>(context, listen: false)
-                                .addTransaction(transaction)
-                                .then((result) {
-                              if (result) {
-                                Navigator.pop(context);
-                              } else {
-                                final snackBar = SnackBar(
-                                  content: Text('Something went wrong!'),
-                                  action: SnackBarAction(
-                                      label: 'Okay', onPressed: () {}),
-                                );
-                                Scaffold.of(context).showSnackBar(snackBar);
-                              }
-                            });
-                          }
-                        },
-                        color: Colors.white,
-                        child: Text(
-                          'Submit',
-                          style: TextStyle(color: Color(0xFF16181C)),
-                        )),
+                  SizedBox(height: 10),
+                  TextField(
+                    cursorColor: Colors.white,
+                    style: TextStyle(color: Colors.white),
+                    onTap: () => _selectDate(context),
+                    readOnly: true,
+                    controller: dateController,
+                    decoration: InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 1),
+                      ),
+                      labelStyle: TextStyle(color: Colors.white),
+                      labelText: 'Date',
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 20),
+                  TagsSection(),
+                  SizedBox(height: 20),
+                  Center(
+                    child: SizedBox(
+                      width: 100,
+                      child: RaisedButton(
+                          onPressed: () {
+                            if (name == null || name == "")
+                              setState(() {
+                                _validatedName = true;
+                              });
+                            else
+                              setState(() {
+                                _validatedName = false;
+                              });
+                            if (amount == null)
+                              setState(() {
+                                _validatedAmount = true;
+                              });
+                            else
+                              setState(() {
+                                _validatedAmount = false;
+                              });
+                            if (amount == null || amount < 0.0)
+                              setState(() {
+                                _negative = true;
+                              });
+                            else
+                              setState(() {
+                                _negative = false;
+                              });
+                            if (accountSelected == null)
+                              setState(() {
+                                _validatedAccount = true;
+                              });
+                            else
+                              setState(() {
+                                _validatedAccount = false;
+                              });
+                            if (!_negative &&
+                                !_validatedAmount &&
+                                !_validatedName &&
+                                !_validatedAccount) {
+                              TransactionModel transaction = TransactionModel(
+                                  name: name,
+                                  amount: amount,
+                                  date: date,
+                                  type: _selection[0] ? "EXPENSE" : "INCOME",
+                                  account: accountIDSelected);
+                              Provider.of<AccountsState>(context, listen: false)
+                                  .addTransaction(transaction)
+                                  .then((result) {
+                                if (result) {
+                                  Navigator.pop(context);
+                                } else {
+                                  final snackBar = SnackBar(
+                                    content: Text('Something went wrong!'),
+                                    action: SnackBarAction(
+                                        label: 'Okay', onPressed: () {}),
+                                  );
+                                  Scaffold.of(ctx).showSnackBar(snackBar);
+                                }
+                              });
+                            }
+                          },
+                          color: Colors.white,
+                          child: Text(
+                            'Submit',
+                            style: TextStyle(color: Color(0xFF16181C)),
+                          )),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -601,6 +604,8 @@ class _TagDataState extends State<TagData> {
 
   @override
   Widget build(BuildContext context) {
+    List<int> selectedTags =
+        Provider.of<AccountsState>(context, listen: false).selectedTagIds;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -618,19 +623,18 @@ class _TagDataState extends State<TagData> {
                   _showDeleteDialog(context, widget.tags[index]);
                 },
                 onTap: () {
-                  setState(() {
-                    widget.tags[index].isSelected =
-                        !widget.tags[index].isSelected;
-                  });
+                  Provider.of<AccountsState>(context, listen: false)
+                      .toggleTag(widget.tags[index].id);
                 },
                 child: Chip(
                     shape: StadiumBorder(side: BorderSide(color: Colors.white)),
-                    backgroundColor: widget.tags[index].isSelected
-                        ? Colors.white
-                        : Color(0xFF16181C),
+                    backgroundColor:
+                        selectedTags.contains(widget.tags[index].id)
+                            ? Colors.white
+                            : Color(0xFF16181C),
                     label: Text('${widget.tags[index].name}',
                         style: TextStyle(
-                            color: widget.tags[index].isSelected
+                            color: selectedTags.contains(widget.tags[index].id)
                                 ? Color(0xFF16181C)
                                 : Colors.white))),
               ),

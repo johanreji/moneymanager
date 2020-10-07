@@ -14,6 +14,7 @@ class AccountsState extends ChangeNotifier {
   List<Tag> tags = [];
   bool hideAccount = false;
   int activeAccountId;
+  List<int> selectedTagIds = [];
   static Future _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
   }
@@ -29,7 +30,8 @@ class AccountsState extends ChangeNotifier {
       "CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, used_count INTEGER)",
     );
     await db.execute(
-      "CREATE TABLE transaction_tag_map(id INTEGER PRIMARY KEY, transaction_id INTEGER, tag_id INTEGER, FOREIGN KEY(tag_id) REFERENCES tags(id), FOREIGN KEY(transaction_id) REFERENCES transactions(id))",
+      "CREATE TABLE transaction_tag_map(id INTEGER PRIMARY KEY, transaction_id INTEGER, tag_id INTEGER )",
+//          "FOREIGN KEY(tag_id) REFERENCES tags(id), FOREIGN KEY(transaction_id) REFERENCES transactions(id))",
     );
   }
 
@@ -92,7 +94,7 @@ class AccountsState extends ChangeNotifier {
           whereArgs: [account.id],
         );
       if (transactionId != -1)
-        transaction.tagIds.forEach((tagId) async {
+        selectedTagIds.forEach((tagId) async {
           await db.insert(
             'transaction_tag_map',
             {
@@ -112,7 +114,7 @@ class AccountsState extends ChangeNotifier {
   Future<bool> addTag(String name) async {
     final Database db = await _database;
     try {
-      await db.insert(
+      int id = await db.insert(
         'tags',
         {
           'name': name,
@@ -120,7 +122,9 @@ class AccountsState extends ChangeNotifier {
         },
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
+      selectedTagIds.add(id);
       await getTags();
+      notifyListeners();
       return true;
     } catch (err) {
       return false;
@@ -129,7 +133,6 @@ class AccountsState extends ChangeNotifier {
 
   Future<void> getTags() async {
     final Database db = await _database;
-
     final List<Map<String, dynamic>> maps =
         await db?.query('tags', orderBy: 'used_count DESC');
 
@@ -167,24 +170,38 @@ class AccountsState extends ChangeNotifier {
 
   Future<void> getTransactions() async {
     final Database db = await _database;
-
-    final List<Map<String, dynamic>> maps =
-        await db?.query('transactions', orderBy: 'date DESC', limit: 50);
+//
+//    final List<Map<String, dynamic>> maps =
+//        await db?.query('transactions', orderBy: 'date DESC', limit: 50);
+    final List<Map<String, dynamic>> maps = await db?.rawQuery(
+        'SELECT tr.id,tr.name,tr.amount,tr.type,tr.account_id,tr.date, GROUP_CONCAT(ta.id) as tag_id from transactions tr '
+        'LEFT JOIN transaction_tag_map tt ON (tr.id = tt.transaction_id) '
+        'LEFT JOIN tags ta ON (tt.tag_id = ta.id) '
+        'GROUP BY tr.id '
+        'LIMIT 50 ');
 
     transactions = List.generate(maps.length, (i) {
+      List<int> tagIds = maps[i]['tag_id'] == null
+          ? []
+          : maps[i]['tag_id']
+              .toString()
+              .split(",")
+              .map((e) => int.parse(e))
+              .toList();
       return TransactionModel(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        amount: maps[i]['amount'],
-        type: maps[i]['type'],
-        date: DateTime.fromMillisecondsSinceEpoch(maps[i]['date']),
-        account: maps[i]['account_id'],
-        accountName: accounts
-            .where((element) => element.id == maps[i]['account_id'])
-            .first
-            .name,
-      );
+          id: maps[i]['id'],
+          name: maps[i]['name'],
+          amount: maps[i]['amount'],
+          type: maps[i]['type'],
+          date: DateTime.fromMillisecondsSinceEpoch(maps[i]['date']),
+          account: maps[i]['account_id'],
+          accountName: accounts
+              .where((element) => element.id == maps[i]['account_id'])
+              .first
+              .name,
+          tagIds: tagIds);
     });
+    await getTags();
     notifyListeners();
     return;
   }
@@ -256,7 +273,22 @@ class AccountsState extends ChangeNotifier {
       where: "id = ?",
       whereArgs: [id],
     );
+    selectedTagIds.remove(id);
     await getTags();
+    await getTransactions();
+    notifyListeners();
     return;
+  }
+
+  void toggleTag(int selectedId) {
+    selectedTagIds.contains(selectedId)
+        ? selectedTagIds.remove(selectedId)
+        : selectedTagIds.add(selectedId);
+    notifyListeners();
+  }
+
+  void clearSelectedTags() {
+    selectedTagIds = [];
+    notifyListeners();
   }
 }

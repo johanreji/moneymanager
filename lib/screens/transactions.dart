@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moneymanagerv3/models/Transaction.dart';
+import 'package:moneymanagerv3/models/tags.dart';
 import 'package:moneymanagerv3/providers/accounts.dart';
 import 'package:provider/provider.dart';
 
@@ -115,6 +116,7 @@ class _TransactionListState extends State<TransactionList> {
 
   @override
   Widget build(BuildContext context) {
+    List<Tag> tags = Provider.of<AccountsState>(context, listen: false).tags;
     int activeId =
         Provider.of<AccountsState>(context, listen: false).activeAccountId;
     List<TransactionModel> transactions = activeId == 0
@@ -204,10 +206,27 @@ class _TransactionListState extends State<TransactionList> {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 5),
+                            SizedBox(height: 10),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 30.0,
+                                    child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount:
+                                            transactions[i].tagIds.length,
+                                        separatorBuilder: (context, index) =>
+                                            SizedBox(width: 5),
+                                        itemBuilder: (context, index) => Chip(
+                                              label: Text(
+                                                '${tags.where((element) => element.id == transactions[i].tagIds[index]).first.name}',
+                                                style: TextStyle(fontSize: 14),
+                                              ),
+                                            )),
+                                  ),
+                                ),
                                 Spacer(),
                                 Text(
                                   (transactions[i].type == "EXPENSE"
