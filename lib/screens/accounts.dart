@@ -7,43 +7,27 @@ import 'package:provider/provider.dart';
 class Accounts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.all(15),
-          child: Text(
-            'Accounts',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-            textAlign: TextAlign.left,
-          ),
-        ),
-        FutureBuilder(
-          future:
-              Provider.of<AccountsState>(context, listen: false).getAccounts(),
-          builder: (ctx, dataSnapshot) {
-            // Display the waiting progress bar
-            if (dataSnapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+    return FutureBuilder(
+      future: Provider.of<AccountsState>(context, listen: false).getAccounts(),
+      builder: (ctx, dataSnapshot) {
+        // Display the waiting progress bar
+        if (dataSnapshot.connectionState == ConnectionState.waiting) {
+          return Container();
+        }
 
-            // Error handling
-            if (dataSnapshot.hasError) {
-              return Text(
-                dataSnapshot.error.toString(),
-                style: TextStyle(color: Colors.white),
-              );
-            }
+        // Error handling
+        if (dataSnapshot.hasError) {
+          return Text(
+            dataSnapshot.error.toString(),
+            style: TextStyle(color: Colors.white),
+          );
+        }
 
-            return Consumer<AccountsState>(
-              builder: (context, accountsState, _) =>
-                  AccountList(accountsState.accounts),
-            );
-          },
-        ),
-      ],
+        return Consumer<AccountsState>(
+          builder: (context, accountsState, _) =>
+              AccountList(accountsState.accounts),
+        );
+      },
     );
   }
 }
@@ -264,129 +248,155 @@ class _AccountListState extends State<AccountList> {
       Account allAccount = Account(id: 0, name: 'All Accounts', balance: sum);
       widget.accounts.insert(0, allAccount);
     }
-    return Stack(
-      children: [
-        Container(
-          child: SizedBox(
-            height: 130,
-            // card height
-            child: PageView.builder(
-              itemCount: widget.accounts.length,
-              controller: pageController,
-              onPageChanged: (int index) {
-                setState(() => _index = index);
-                Provider.of<AccountsState>(context, listen: false)
-                    .changeActiveAccount(widget.accounts[index].id);
-              },
-              itemBuilder: (_, i) {
-                return Transform.scale(
-                  scale: i == _index ? 1 : 0.9,
-                  child: GestureDetector(
-                    onLongPress: () {
-                      if (widget.accounts[i].id != 0 && i == _index)
-                        _showDeleteDialog(context, widget.accounts[i].name,
-                            widget.accounts[i].id);
+    double offset = Provider.of<AccountsState>(context).scrollOffset;
+    return AnimatedContainer(
+      height: offset > 0 ? 0 : 190,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
+      child: Wrap(
+        direction: Axis.horizontal,
+        children: [
+          Container(
+            padding: EdgeInsets.all(15),
+            child: Text(
+              'Accounts',
+              style: TextStyle(color: Colors.white, fontSize: 20),
+              textAlign: TextAlign.left,
+            ),
+          ),
+          Stack(
+            children: [
+              Container(
+                child: SizedBox(
+                  height: 130,
+                  // card height
+                  child: PageView.builder(
+                    itemCount: widget.accounts.length,
+                    controller: pageController,
+                    onPageChanged: (int index) {
+                      setState(() => _index = index);
+                      Provider.of<AccountsState>(context, listen: false)
+                          .changeActiveAccount(widget.accounts[index].id);
                     },
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 15, horizontal: 5),
-                      decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                              begin: Alignment(-1.0, -4.0),
-                              end: Alignment(1.0, 4.0),
-                              colors: [
-                                Color(0xFF141619),
-                                Color(0xFF181a1e),
-                              ]),
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                          boxShadow: [
-                            BoxShadow(
-                                color: i == _index
-                                    ? Colors.blue[800]
-                                    : Color(0xFF131418),
-                                offset: Offset(1.0, 1.0),
-                                blurRadius: i == _index ? 5.0 : 15,
-                                spreadRadius: i == _index ? 0 : 1),
-                            BoxShadow(
-                                color: i == _index
-                                    ? Colors.blue[800]
-                                    : Color(0xFF131418),
-                                offset: Offset(-1.0, -1.0),
-                                blurRadius: i == _index ? 5.0 : 15,
-                                spreadRadius: i == _index ? 0 : 1),
-                          ]),
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            "${widget.accounts[i].name}",
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                            textAlign: TextAlign.left,
+                    itemBuilder: (_, i) {
+                      return Transform.scale(
+                        scale: i == _index ? 1 : 0.9,
+                        child: GestureDetector(
+                          onLongPress: () {
+                            if (widget.accounts[i].id != 0 && i == _index)
+                              _showDeleteDialog(
+                                  context,
+                                  widget.accounts[i].name,
+                                  widget.accounts[i].id);
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: 15, horizontal: 5),
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                    begin: Alignment(-1.0, -4.0),
+                                    end: Alignment(1.0, 4.0),
+                                    colors: [
+                                      Color(0xFF141619),
+                                      Color(0xFF181a1e),
+                                    ]),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(20)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: i == _index
+                                          ? Colors.blue[800]
+                                          : Color(0xFF131418),
+                                      offset: Offset(1.0, 1.0),
+                                      blurRadius: i == _index ? 5.0 : 15,
+                                      spreadRadius: i == _index ? 0 : 1),
+                                  BoxShadow(
+                                      color: i == _index
+                                          ? Colors.blue[800]
+                                          : Color(0xFF131418),
+                                      offset: Offset(-1.0, -1.0),
+                                      blurRadius: i == _index ? 5.0 : 15,
+                                      spreadRadius: i == _index ? 0 : 1),
+                                ]),
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  "${widget.accounts[i].name}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                  textAlign: TextAlign.left,
+                                ),
+                                Text(
+                                  "Rs. " +
+                                      widget.accounts[i].balance
+                                          .toString()
+                                          .split(".")[0] +
+                                      (widget.accounts[i].balance
+                                                  .toString()
+                                                  .split(".")[1] ==
+                                              "0"
+                                          ? ""
+                                          : widget.accounts[i].balance
+                                              .toString()
+                                              .split(".")[1]),
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text(
-                            "Rs. " +
-                                widget.accounts[i].balance
-                                    .toString()
-                                    .split(".")[0] +
-                                (widget.accounts[i].balance
-                                            .toString()
-                                            .split(".")[1] ==
-                                        "0"
-                                    ? ""
-                                    : widget.accounts[i].balance
-                                        .toString()
-                                        .split(".")[1]),
-                            textAlign: TextAlign.right,
-                            style: TextStyle(fontSize: 14, color: Colors.white),
-                          ),
-                        ],
-                      ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                left: widget.accounts.length == 0
+                    ? (MediaQuery.of(context).size.width - 140) / 2
+                    : 25,
+                child: GestureDetector(
+                  onTap: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => AddAccountScreen()),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(50),
+                      color: Colors.blue[800],
+                    ),
+                    height: 60,
+                    padding: widget.accounts.length == 0
+                        ? EdgeInsets.all(20)
+                        : EdgeInsets.zero,
+                    width: widget.accounts.length == 0 ? null : 60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.accounts.length == 0)
+                          Text('Add account',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                        if (widget.accounts.length == 0) SizedBox(width: 5),
+                        Icon(
+                          Icons.add,
+                          color: Colors.white,
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ),
-        Positioned(
-          top: 40,
-          left: widget.accounts.length == 0
-              ? (MediaQuery.of(context).size.width - 140) / 2
-              : 25,
-          child: GestureDetector(
-            onTap: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) => AddAccountScreen()),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(50),
-                color: Colors.blue[800],
+                ),
               ),
-              height: 60,
-              padding: widget.accounts.length == 0
-                  ? EdgeInsets.all(20)
-                  : EdgeInsets.zero,
-              width: widget.accounts.length == 0 ? null : 60,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.accounts.length == 0)
-                    Text('Add account',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  if (widget.accounts.length == 0) SizedBox(width: 5),
-                  Icon(
-                    Icons.add,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

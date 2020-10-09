@@ -19,6 +19,7 @@ class AccountsState extends ChangeNotifier {
   bool filterApplied = false;
   List<bool> filteredTypes = [true, true];
   DateTime filteredDate = DateTime.now();
+  double scrollOffset = 0.0;
   static Future _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
   }
@@ -312,6 +313,11 @@ class AccountsState extends ChangeNotifier {
     filteredDate = dateTime;
 //    int filteredEpoch = filteredDate.millisecondsSinceEpoch;
 //    await getTransactions(filteredEpoch: filteredEpoch);
+    notifyListeners();
+  }
+
+  void setOffset(double offset) {
+    scrollOffset = offset;
     notifyListeners();
   }
 }
