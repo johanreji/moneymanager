@@ -15,6 +15,10 @@ class AccountsState extends ChangeNotifier {
   bool hideAccount = false;
   int activeAccountId;
   List<int> selectedTagIds = [];
+  List<int> filteredTagIds = [];
+  bool filterApplied = false;
+  List<bool> filteredTypes = [true, true];
+  DateTime filteredDate = DateTime.now();
   static Future _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
   }
@@ -168,7 +172,7 @@ class AccountsState extends ChangeNotifier {
     return;
   }
 
-  Future<void> getTransactions() async {
+  Future<void> getTransactions({int filteredEpoch = 0}) async {
     final Database db = await _database;
 //
 //    final List<Map<String, dynamic>> maps =
@@ -178,7 +182,7 @@ class AccountsState extends ChangeNotifier {
         'LEFT JOIN transaction_tag_map tt ON (tr.id = tt.transaction_id) '
         'LEFT JOIN tags ta ON (tt.tag_id = ta.id) '
         'GROUP BY tr.id '
-        'LIMIT 50 ');
+        'ORDER BY tr.date DESC ');
 
     transactions = List.generate(maps.length, (i) {
       List<int> tagIds = maps[i]['tag_id'] == null
@@ -289,6 +293,25 @@ class AccountsState extends ChangeNotifier {
 
   void clearSelectedTags() {
     selectedTagIds = [];
+    notifyListeners();
+  }
+
+  void toggleFilterTag(int selectedId) {
+    filteredTagIds.contains(selectedId)
+        ? filteredTagIds.remove(selectedId)
+        : filteredTagIds.add(selectedId);
+    notifyListeners();
+  }
+
+  void toggleFilterType(int selectedType) {
+    filteredTypes[selectedType] = !filteredTypes[selectedType];
+    notifyListeners();
+  }
+
+  void changeFilterDate(DateTime dateTime) {
+    filteredDate = dateTime;
+//    int filteredEpoch = filteredDate.millisecondsSinceEpoch;
+//    await getTransactions(filteredEpoch: filteredEpoch);
     notifyListeners();
   }
 }
