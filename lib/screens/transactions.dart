@@ -84,18 +84,6 @@ class _TransactionListState extends State<TransactionList> {
         : widget.transactions
             .where((element) => element.account == activeId)
             .toList();
-    if (!filteredTypes[0] || !filteredTypes[1])
-      transactions = transactions
-          .where((element) => filteredTypes[0]
-              ? element.type == "EXPENSE"
-              : false || filteredTypes[1] ? element.type == "INCOME" : false)
-          .toList();
-    if (filteredTagIds.length > 0)
-      transactions = transactions
-          .where((element) =>
-              filteredTagIds.indexWhere((id) => element.tagIds.contains(id)) >=
-              0)
-          .toList();
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -134,28 +122,33 @@ class _TransactionListState extends State<TransactionList> {
                     style: TextStyle(color: Colors.white),
                   ),
                 )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  controller: scrollController,
-                  physics: BouncingScrollPhysics(),
-                  itemBuilder: (context, i) {
-                    bool showDate = i == 0
-                        ? true
-                        : transactions[i]
-                                    .date
-                                    .difference(widget.transactions[i - 1].date)
-                                    .inDays !=
-                                0
-                            ? true
-                            : false;
-                    return TransactionItem(
-                      transaction: transactions[i],
-                      index: i,
-                      length: transactions.length,
-                      showDate: showDate,
-                    );
-                  },
-                  itemCount: transactions.length,
+              : Theme(
+                  data: Theme.of(context)
+                      .copyWith(accentColor: Colors.transparent),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    controller: scrollController,
+                    physics: ClampingScrollPhysics(),
+                    itemBuilder: (context, i) {
+                      bool showDate = i == 0
+                          ? true
+                          : transactions[i]
+                                      .date
+                                      .difference(
+                                          widget.transactions[i - 1].date)
+                                      .inDays !=
+                                  0
+                              ? true
+                              : false;
+                      return TransactionItem(
+                        transaction: transactions[i],
+                        index: i,
+                        length: transactions.length,
+                        showDate: showDate,
+                      );
+                    },
+                    itemCount: transactions.length,
+                  ),
                 ),
         ),
       ],
@@ -209,37 +202,39 @@ class FilterScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
-          Text(
-            'Filter by tags',
-            style: TextStyle(color: Colors.white, fontSize: 14),
-            textAlign: TextAlign.left,
-          ),
-          Container(
-            height: 40,
-            margin: EdgeInsets.only(top: 10),
-            child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) => ActionChip(
-                      shape:
-                          StadiumBorder(side: BorderSide(color: Colors.white)),
-                      label: Text(
-                        tags[index].name,
-                        style: TextStyle(
-                            color: filteredTagIds.contains(tags[index].id)
-                                ? Color(0xFF16181C)
-                                : Colors.white),
+          if (tags.length > 0)
+            Text(
+              'Filter by tags',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+              textAlign: TextAlign.left,
+            ),
+          if (tags.length > 0)
+            Container(
+              height: 40,
+              margin: EdgeInsets.only(top: 10),
+              child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) => ActionChip(
+                        shape: StadiumBorder(
+                            side: BorderSide(color: Colors.white)),
+                        label: Text(
+                          tags[index].name,
+                          style: TextStyle(
+                              color: filteredTagIds.contains(tags[index].id)
+                                  ? Color(0xFF16181C)
+                                  : Colors.white),
+                        ),
+                        backgroundColor: filteredTagIds.contains(tags[index].id)
+                            ? Colors.white
+                            : Color(0xFF131418),
+                        onPressed: () =>
+                            Provider.of<AccountsState>(context, listen: false)
+                                .toggleFilter(tags[index].id, null),
                       ),
-                      backgroundColor: filteredTagIds.contains(tags[index].id)
-                          ? Colors.white
-                          : Color(0xFF131418),
-                      onPressed: () =>
-                          Provider.of<AccountsState>(context, listen: false)
-                              .toggleFilterTag(tags[index].id),
-                    ),
-                separatorBuilder: (context, _) => SizedBox(width: 5),
-                itemCount: tags.length),
-          ),
-          SizedBox(height: 30),
+                  separatorBuilder: (context, _) => SizedBox(width: 5),
+                  itemCount: tags.length),
+            ),
+          if (tags.length > 0) SizedBox(height: 30),
           Text(
             'Filter by type',
             style: TextStyle(color: Colors.white, fontSize: 14),
@@ -285,8 +280,9 @@ class FilterScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               borderWidth: 2,
               isSelected: filteredType,
-              onPressed: Provider.of<AccountsState>(context, listen: false)
-                  .toggleFilterType,
+              onPressed: (index) =>
+                  Provider.of<AccountsState>(context, listen: false)
+                      .toggleFilter(null, index),
             ),
           ),
 //          SizedBox(height: 40),
@@ -438,7 +434,7 @@ class TransactionItem extends StatelessWidget {
                                 )),
                       ),
                     ),
-                    Spacer(),
+                    SizedBox(width: 20),
                     Text(
                       (transaction.type == "EXPENSE" ? 'From ' : 'To ') +
                           transaction.accountName,

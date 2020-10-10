@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moneymanagerv3/models/account.dart';
 import 'package:moneymanagerv3/providers/accounts.dart';
 import 'package:moneymanagerv3/screens/accounts.dart';
 import 'package:moneymanagerv3/screens/transactions.dart';
@@ -194,7 +195,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   int accountIDSelected;
   TextEditingController dateController = TextEditingController(
       text: DateFormat('dd MMM yyyy').format(DateTime.now()));
-
+  List<Account> accounts = [];
   List<bool> _selection = [true, false];
 
   _selectDate(BuildContext context) async {
@@ -216,6 +217,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       });
       dateController.text = DateFormat('dd MMM yyyy').format(picked);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    accounts = Provider.of<AccountsState>(context, listen: false)
+        .accounts
+        .where((element) => element.id != 0)
+        .toList();
+    accountSelected = accounts[0].name;
+    accountIDSelected = accounts[0].id;
   }
 
   @override
@@ -352,26 +364,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   SizedBox(height: 20),
                   DropdownButton(
-                    hint: accountSelected == null
-                        ? Text(
-                            'Select an Account',
-                            style: TextStyle(
-                                color: _validatedAccount
-                                    ? Colors.red
-                                    : Colors.white),
-                          )
-                        : Text(
-                            accountSelected,
-                            style: TextStyle(color: Colors.white),
-                          ),
+                    hint: Text(
+                      accountSelected,
+                      style: TextStyle(color: Colors.white),
+                    ),
                     dropdownColor: Colors.white,
                     isExpanded: true,
                     iconSize: 30.0,
                     style: TextStyle(color: Color(0xFF16181C)),
-                    items: Provider.of<AccountsState>(context, listen: false)
-                        .accounts
-                        .where((element) => element.id != 0)
-                        .map(
+                    items: accounts.map(
                       (val) {
                         return DropdownMenuItem<String>(
                           value: val.id.toString(),
@@ -392,6 +393,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           accountIDSelected = int.parse(val);
                         },
                       );
+                      FocusScope.of(context).unfocus();
                     },
                   ),
                   SizedBox(height: 10),

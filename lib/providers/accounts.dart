@@ -11,6 +11,7 @@ class AccountsState extends ChangeNotifier {
   Future<Database> _database;
   List<Account> accounts = [];
   List<TransactionModel> transactions = [];
+  List<TransactionModel> initialTransactions = [];
   List<Tag> tags = [];
   bool hideAccount = false;
   int activeAccountId;
@@ -159,10 +160,10 @@ class AccountsState extends ChangeNotifier {
 
     accounts = List.generate(maps.length, (i) {
       return Account(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        balance: maps[i]['balance'],
-      );
+          id: maps[i]['id'],
+          name: maps[i]['name'],
+          balance: maps[i]['balance'],
+          filteredBalance: 0.0);
     });
     if (activeAccountId == null && accounts.length > 1) {
       activeAccountId = 0;
@@ -206,6 +207,7 @@ class AccountsState extends ChangeNotifier {
               .name,
           tagIds: tagIds);
     });
+    initialTransactions = transactions;
     await getTags();
     notifyListeners();
     return;
@@ -297,15 +299,36 @@ class AccountsState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleFilterTag(int selectedId) {
-    filteredTagIds.contains(selectedId)
-        ? filteredTagIds.remove(selectedId)
-        : filteredTagIds.add(selectedId);
-    notifyListeners();
-  }
+  void toggleFilter(int selectedTag, int selectedType) {
+    double filterBalance = 0.0;
+    if (selectedTag != null) {
+      filteredTagIds.contains(selectedTag)
+          ? filteredTagIds.remove(selectedTag)
+          : filteredTagIds.add(selectedTag);
+      if (filteredTagIds.length > 0) {
+        transactions = transactions.where((element) {
+          filterBalance = filterBalance + element.amount;
+          return filteredTagIds
+                  .indexWhere((id) => element.tagIds.contains(id)) >=
+              0;
+        }).toList();
+      } else
+        transactions = initialTransactions;
+    }
 
-  void toggleFilterType(int selectedType) {
-    filteredTypes[selectedType] = !filteredTypes[selectedType];
+    if (selectedType != null) {
+      filteredTypes[selectedType] = !filteredTypes[selectedType];
+      if (!filteredTypes[0] || !filteredTypes[1]) {
+        transactions = transactions.where((element) {
+          filterBalance = filterBalance + element.amount;
+          return filteredTypes[0]
+              ? element.type == "EXPENSE"
+              : false || filteredTypes[1] ? element.type == "INCOME" : false;
+        }).toList();
+      } else
+        transactions = initialTransactions;
+    }
+    accounts[activeAccountId].filteredBalance = filterBalance;
     notifyListeners();
   }
 

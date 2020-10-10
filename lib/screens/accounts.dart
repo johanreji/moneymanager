@@ -245,12 +245,16 @@ class _AccountListState extends State<AccountList> {
       widget.accounts.forEach((element) {
         sum += element.balance;
       });
-      Account allAccount = Account(id: 0, name: 'All Accounts', balance: sum);
+      Account allAccount = Account(
+          id: 0, name: 'All Accounts', balance: sum, filteredBalance: 0.0);
       widget.accounts.insert(0, allAccount);
     }
 
     bool hideAccount = Provider.of<AccountsState>(context).hideAccount;
-
+    List<int> filteredTagIds =
+        Provider.of<AccountsState>(context).filteredTagIds;
+    List<bool> filteredTypes =
+        Provider.of<AccountsState>(context).filteredTypes;
     return AnimatedContainer(
       height: hideAccount ? 0 : 190,
       duration: Duration(milliseconds: 200),
@@ -281,6 +285,10 @@ class _AccountListState extends State<AccountList> {
                           .changeActiveAccount(widget.accounts[index].id);
                     },
                     itemBuilder: (_, i) {
+                      double balance = filteredTagIds.length > 0 ||
+                              filteredTypes.contains(false)
+                          ? widget.accounts[i].filteredBalance
+                          : widget.accounts[i].balance;
                       return Transform.scale(
                         scale: i == _index ? 1 : 0.9,
                         child: GestureDetector(
@@ -331,22 +339,31 @@ class _AccountListState extends State<AccountList> {
                                       fontSize: 18, color: Colors.white),
                                   textAlign: TextAlign.left,
                                 ),
-                                Text(
-                                  "Rs. " +
-                                      widget.accounts[i].balance
-                                          .toString()
-                                          .split(".")[0] +
-                                      (widget.accounts[i].balance
+                                Row(
+                                  children: [
+                                    Spacer(),
+                                    if (filteredTagIds.length > 0 ||
+                                        filteredTypes.contains(false))
+                                      Text(
+                                        "Filtered Balance:",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.white),
+                                      ),
+                                    Text(
+                                      "Rs. " +
+                                          balance.toString().split(".")[0] +
+                                          (balance.toString().split(".")[1] ==
+                                                  "0"
+                                              ? ""
+                                              : balance
                                                   .toString()
-                                                  .split(".")[1] ==
-                                              "0"
-                                          ? ""
-                                          : widget.accounts[i].balance
-                                              .toString()
-                                              .split(".")[1]),
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.white),
+                                                  .split(".")[1]),
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.white),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
