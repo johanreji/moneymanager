@@ -54,13 +54,12 @@ class _TransactionListState extends State<TransactionList> {
   void initState() {
     super.initState();
     scrollController.addListener(() {
-//      if (scrollController.offset > 20) {
-//        Provider.of<AccountsState>(context, listen: false)
-//            .transformAccounts(true);
-//      } else {
-//        Provider.of<AccountsState>(context, listen: false)
-//            .transformAccounts(false);
-//      }
+      if (scrollController.offset > MediaQuery.of(context).size.height)
+        Provider.of<AccountsState>(context, listen: false)
+            .transformAccounts(true);
+      if (scrollController.offset <= scrollController.position.minScrollExtent)
+        Provider.of<AccountsState>(context, listen: false)
+            .transformAccounts(false);
     });
   }
 

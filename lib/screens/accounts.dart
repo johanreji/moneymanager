@@ -248,10 +248,12 @@ class _AccountListState extends State<AccountList> {
       Account allAccount = Account(id: 0, name: 'All Accounts', balance: sum);
       widget.accounts.insert(0, allAccount);
     }
-    double offset = Provider.of<AccountsState>(context).scrollOffset;
+
+    bool hideAccount = Provider.of<AccountsState>(context).hideAccount;
+
     return AnimatedContainer(
-      height: offset > 0 ? 0 : 190,
-      duration: Duration(milliseconds: 500),
+      height: hideAccount ? 0 : 190,
+      duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
       child: Wrap(
         direction: Axis.horizontal,
