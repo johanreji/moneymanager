@@ -54,7 +54,7 @@ class _TransactionListState extends State<TransactionList> {
   void initState() {
     super.initState();
     scrollController.addListener(() {
-      if (scrollController.offset > MediaQuery.of(context).size.height)
+      if (scrollController.offset > MediaQuery.of(context).size.height - 200)
         Provider.of<AccountsState>(context, listen: false)
             .transformAccounts(true);
       if (scrollController.offset <= scrollController.position.minScrollExtent)
