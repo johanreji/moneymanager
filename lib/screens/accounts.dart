@@ -289,6 +289,11 @@ class _AccountListState extends State<AccountList> {
                               filteredTypes.contains(false)
                           ? widget.accounts[i].filteredBalance
                           : widget.accounts[i].balance;
+                      String trimmedBalance =
+                          balance.toString().split(".")[0].replaceAll("-", "") +
+                              (balance.toString().split(".")[1] == "0"
+                                  ? ""
+                                  : balance.toString().split(".")[1]);
                       return Transform.scale(
                         scale: i == _index ? 1 : 0.9,
                         child: GestureDetector(
@@ -340,25 +345,19 @@ class _AccountListState extends State<AccountList> {
                                   textAlign: TextAlign.left,
                                 ),
                                 Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Spacer(),
                                     if (filteredTagIds.length > 0 ||
                                         filteredTypes.contains(false))
                                       Text(
-                                        "Filtered Balance:",
+                                        "Filtered Amount: ",
                                         textAlign: TextAlign.right,
                                         style: TextStyle(
                                             fontSize: 12, color: Colors.white),
                                       ),
                                     Text(
-                                      "Rs. " +
-                                          balance.toString().split(".")[0] +
-                                          (balance.toString().split(".")[1] ==
-                                                  "0"
-                                              ? ""
-                                              : balance
-                                                  .toString()
-                                                  .split(".")[1]),
+                                      "Rs. " + trimmedBalance,
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
                                           fontSize: 14, color: Colors.white),

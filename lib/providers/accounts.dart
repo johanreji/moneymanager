@@ -63,7 +63,10 @@ class AccountsState extends ChangeNotifier {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+      filteredTagIds = [];
+      filteredTypes = [true, true];
       await getAccounts();
+      await getTransactions();
       return true;
     } catch (err) {
       return false;
@@ -109,6 +112,8 @@ class AccountsState extends ChangeNotifier {
             },
           );
         });
+      filteredTagIds = [];
+      filteredTypes = [true, true];
       await getAccounts();
       await getTransactions();
       return true;
@@ -300,14 +305,12 @@ class AccountsState extends ChangeNotifier {
   }
 
   void toggleFilter(int selectedTag, int selectedType) {
-    double filterBalance = 0.0;
     if (selectedTag != null) {
       filteredTagIds.contains(selectedTag)
           ? filteredTagIds.remove(selectedTag)
           : filteredTagIds.add(selectedTag);
       if (filteredTagIds.length > 0) {
         transactions = transactions.where((element) {
-          filterBalance = filterBalance + element.amount;
           return filteredTagIds
                   .indexWhere((id) => element.tagIds.contains(id)) >=
               0;
@@ -320,7 +323,6 @@ class AccountsState extends ChangeNotifier {
       filteredTypes[selectedType] = !filteredTypes[selectedType];
       if (!filteredTypes[0] || !filteredTypes[1]) {
         transactions = transactions.where((element) {
-          filterBalance = filterBalance + element.amount;
           return filteredTypes[0]
               ? element.type == "EXPENSE"
               : false || filteredTypes[1] ? element.type == "INCOME" : false;
@@ -328,7 +330,22 @@ class AccountsState extends ChangeNotifier {
       } else
         transactions = initialTransactions;
     }
-    accounts[activeAccountId].filteredBalance = filterBalance;
+    double totalFilterBalance = 0.0;
+    accounts.forEach((element) {
+      element.filteredBalance = 0.0;
+    });
+    transactions.forEach((element) {
+      if (element.type == "EXPENSE") {
+        accounts[element.account].filteredBalance -= element.amount;
+        totalFilterBalance = totalFilterBalance - element.amount;
+      } else {
+        accounts[element.account].filteredBalance += element.amount;
+        totalFilterBalance = totalFilterBalance + element.amount;
+      }
+    });
+    if (accounts.length > 1) {
+      accounts[0].filteredBalance = totalFilterBalance;
+    }
     notifyListeners();
   }
 
