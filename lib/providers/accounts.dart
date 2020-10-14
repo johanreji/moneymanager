@@ -336,15 +336,22 @@ class AccountsState extends ChangeNotifier {
     });
     transactions.forEach((element) {
       if (element.type == "EXPENSE") {
-        accounts[element.account].filteredBalance -= element.amount;
+        accounts
+            .where((item) => item.id == element.account)
+            .toList()[0]
+            .filteredBalance -= element.amount;
         totalFilterBalance = totalFilterBalance - element.amount;
       } else {
-        accounts[element.account].filteredBalance += element.amount;
+        accounts
+            .where((item) => item.id == element.account)
+            .toList()[0]
+            .filteredBalance += element.amount;
         totalFilterBalance = totalFilterBalance + element.amount;
       }
     });
     if (accounts.length > 1) {
-      accounts[0].filteredBalance = totalFilterBalance;
+      accounts.where((item) => item.id == 0).toList()[0]
+        ..filteredBalance = totalFilterBalance;
     }
     notifyListeners();
   }
